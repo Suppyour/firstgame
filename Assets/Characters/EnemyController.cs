@@ -100,13 +100,14 @@ namespace Characters
 
         private void Die()
         {
-            // УБЕДИТЕСЬ ЧТО ОПЫТ ВЫДАЕТСЯ ПРАВИЛЬНО
+            // ПЕРЕДАВАЕМ ЧИСЛО (опыт), А НЕ ССЫЛКУ НА ОБЪЕКТ!
             int expToGive = data != null ? data.experienceValue : 10;
+
             Debug.Log($"Enemy died! Giving {expToGive} experience");
 
-            // ВЫЗЫВАЕМ СОБЫТИЕ ОПЫТА
+            // ВАЖНО: передаем ЧИСЛО, а не 'this'
             EventManager.Instance?.TriggerEvent(GameEventType.ExperienceGained, expToGive);
-            EventManager.Instance?.TriggerEvent(GameEventType.EnemyDied, this);
+            EventManager.Instance?.TriggerEvent(GameEventType.EnemyDied, this); // это отдельное событие
 
             Destroy(gameObject);
         }

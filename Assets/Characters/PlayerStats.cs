@@ -25,7 +25,7 @@ namespace Characters
 
             // ТРИГГЕРИМ НАЧАЛЬНОЕ СОСТОЯНИЕ
             EventManager.Instance?.TriggerEvent(GameEventType.PlayerHealthChanged, currentHealth);
-            EventManager.Instance?.TriggerEvent(GameEventType.ExperienceGained, 0);
+            EventManager.Instance?.TriggerEvent(GameEventType.ExperienceChanged, experience); // ← ИСПРАВЛЕНО!
 
             // ПОДПИСЫВАЕМСЯ НА СОБЫТИЯ
             EventManager.Instance?.StartListening(GameEventType.ExperienceGained, OnExperienceGained);
@@ -33,34 +33,33 @@ namespace Characters
 
         public void TakeDamage(int damage)
         {
-            if (damage <= 0) return;
-
             currentHealth -= damage;
             Debug.Log($"Player took {damage} damage. Health: {currentHealth}/{maxHealth}");
 
-            // ВЫЗЫВАЕМ СОБЫТИЕ ПРИ ЛЮБОМ ИЗМЕНЕНИИ ЗДОРОВЬЯ
             EventManager.Instance?.TriggerEvent(GameEventType.PlayerHealthChanged, currentHealth);
 
-            if (currentHealth <= 0)
-            {
-                Die();
-            }
+            if (currentHealth <= 0) Die();
         }
 
         private void OnExperienceGained(object expAmount)
         {
-            int exp = (int)expAmount;
-            if (exp <= 0) return;
-
-            experience += exp;
-            Debug.Log($"Gained {exp} XP. Total: {experience}/{experienceToNextLevel}");
-
-            // ВЫЗЫВАЕМ СОБЫТИЕ ОПЫТА
-            EventManager.Instance?.TriggerEvent(GameEventType.ExperienceGained, experience);
-
-            if (experience >= experienceToNextLevel)
+            // ЗАЩИТА ОТ НЕПРАВИЛЬНЫХ ДАННЫХ
+            if (expAmount is int exp && exp > 0)
             {
-                LevelUp();
+                experience += exp;
+                Debug.Log($"✅ Gained {exp} XP. Total: {experience}/{experienceToNextLevel}");
+
+                // ВАЖНО: Триггерим ДРУГОЕ событие для HUD!
+                EventManager.Instance?.TriggerEvent(GameEventType.ExperienceChanged, experience); // ← ИСПРАВЛЕНО!
+
+                if (experience >= experienceToNextLevel)
+                {
+                    LevelUp();
+                }
+            }
+            else
+            {
+                Debug.LogError($"❌ Invalid experience data: {expAmount} (type: {expAmount?.GetType()})");
             }
         }
 
@@ -72,11 +71,8 @@ namespace Characters
 
             Debug.Log($"Level Up! Now level {level}. Next level at {experienceToNextLevel} XP");
 
-            // ВЫЗЫВАЕМ СОБЫТИЕ ЛЕВЕЛ-АПА
             EventManager.Instance?.TriggerEvent(GameEventType.PlayerLevelUp, level);
-
-            // ТРИГГЕРИМ ОБНОВЛЕНИЕ ОПЫТА ДЛЯ HUD
-            EventManager.Instance?.TriggerEvent(GameEventType.ExperienceGained, experience);
+            EventManager.Instance?.TriggerEvent(GameEventType.ExperienceChanged, experience); // ← ИСПРАВЛЕНО!
         }
 
         private void Die()

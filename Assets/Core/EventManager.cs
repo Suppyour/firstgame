@@ -9,7 +9,8 @@ namespace Core
         EnemySpawned,
         EnemyDied,
         PlayerLevelUp,
-        ExperienceGained,
+        ExperienceGained,    // ← для получения опыта от врагов
+        ExperienceChanged,   // ← для обновления HUD (ДОБАВЬТЕ ЭТО!)
         PlayerHealthChanged,
         GameStart,
         GameEnd
@@ -21,8 +22,6 @@ namespace Core
 
         private Dictionary<GameEventType, Action<object>> eventDictionary;
 
-        
-
         private void Awake()
         {
             if (Instance == null)
@@ -30,6 +29,7 @@ namespace Core
                 Instance = this;
                 eventDictionary = new Dictionary<GameEventType, Action<object>>();
                 DontDestroyOnLoad(gameObject);
+                Debug.Log("✅ EventManager initialized successfully");
             }
             else
             {
